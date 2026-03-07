@@ -14,8 +14,6 @@ on:
 jobs:
   patch-kernel:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu-24.04
     strategy:
       matrix:
         fedora_version:
