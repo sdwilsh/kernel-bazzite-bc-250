@@ -1,15 +1,17 @@
 name: Patch Bazzite Kernel Source
 
 on:
-  schedule:
-    - cron: "40 2 * * 0" # 8:40 utc monday
   workflow_dispatch:
   # TODO:
-  # 1) set this up to run on changes to this file
-  # 2) setup renovate to update this file on new bazzite kernel releases
-  # 3) remove Pull Request kickoff
-  # 4) actually setup COPR
-  pull_request:
+  # - setup renovate to update this file on new bazzite kernel releases
+  # - actually setup COPR
+  pull_request_target:
+    paths:
+      - .github/workflows/release.yaml
+      - linux-kernel-bc250.patch
+    types:
+      - opened
+      - synchronize
 
 jobs:
   patch-kernel:
@@ -83,10 +85,13 @@ jobs:
           token = ${{ secrets.COPR_TOKEN }}
           copr_url = https://copr.fedorainfracloud.org
           EOF
+        if: github.event_name != 'pull_request_target'
 
       # TODO: remove this step
-      - name: Debug Upload
+      - name: Log Upload Targets
         run: ls -la ./upstream/build/SRPMS/kernel-*.src.rpm
+        if: github.event_name == 'pull_request_target'
       - name: Upload to COPR
         run: |
           copr-cli build sdwilsh/kernel-bazzite-bc250 ./upstream/build/SRPMS/kernel-*.src.rpm
+        if: github.event_name != 'pull_request_target'
