@@ -16,6 +16,7 @@
     "github>marinatedconcrete/config//renovate/marinatedconcrete#renovate-config-2.3.0",
     "github>marinatedconcrete/config//renovate/recommended#renovate-config-2.3.0"
   ],
+  "forkProcessing": "enabled",
   "packageRules": [
     {
         "automerge": true,
