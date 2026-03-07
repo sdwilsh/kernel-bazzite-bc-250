@@ -38,13 +38,13 @@ jobs:
             --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
             --build-arg FEDORA_VERSION=${FEDORA_VERSION}
           sudo podman image prune -f
-          TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' kernel.spec)
+          TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' ./upstream/kernel.spec)
           echo "TARFILE_RELEASE is $TARFILE_RELEASE"
-          echo "$TARFILE_RELEASE" > .tarfile-release
-          linuxfname="linux-${TARFILE_RELEASE}.tar.xz"
+          echo "$TARFILE_RELEASE" > ./upstream/.tarfile-release
+          linuxfname="./upstream/linux-${TARFILE_RELEASE}.tar.xz"
           if [ ! -f "${linuxfname}" ]; then
             echo "Downloading ${linuxfname}"
-            curl -L -o "./upstream/${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
+            curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
       
       - name: Add BC-250 Frequency Patch
