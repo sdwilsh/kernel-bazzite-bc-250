@@ -56,7 +56,7 @@ jobs:
             -e FEDORA_VERSION=${{ matrix.fedora_version }} \
             fedora_builder rpmbuild \
               --with bazzite \
-              --with ubsb -\
+              --with ubsb \
                 --define '_topdir   %(pwd)/build' \
                 --define '_builddir %{_topdir}/BUILD' \
                 --define '_rpmdir   %{_topdir}/RPMS' \
