@@ -106,5 +106,5 @@ jobs:
           EOF
       - name: Upload to COPR
         run: |
-          copr-cli build sdwilsh/kernel-bazzite-bc-250 ./upstream/build/SRPMS/kernel-*.src.rpm
+          copr-cli build sdwilsh/kernel-bazzite-bc-250 SRPMS/kernel-*.src.rpm
     runs-on: ubuntu-latest
