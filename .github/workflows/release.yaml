@@ -5,12 +5,17 @@ on:
   # TODO:
   # - setup renovate to update this file on new bazzite kernel releases
   pull_request:
-    paths:
+    paths: &paths
       - .github/workflows/release.yaml
       - linux-kernel-bc250.patch
     types:
       - opened
       - synchronize
+  push:
+    branches:
+      - main
+      - renovate/**
+    paths: *paths
 
 jobs:
   patch-kernel:
