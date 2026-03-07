@@ -38,6 +38,14 @@ jobs:
             --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
             --build-arg FEDORA_VERSION=${FEDORA_VERSION}
           sudo podman image prune -f
+          TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' kernel.spec)
+          echo "TARFILE_RELEASE is $TARFILE_RELEASE"
+          echo "$TARFILE_RELEASE" > .tarfile-release
+          linuxfname="linux-${TARFILE_RELEASE}.tar.xz"
+          if [ ! -f "${linuxfname}" ]; then
+            echo "Downloading ${linuxfname}"
+            curl -L -o "./upstream/${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
+          fi
       
       - name: Add BC-250 Frequency Patch
         run:
@@ -82,7 +90,3 @@ jobs:
       - name: Upload to COPR
         run: |
           copr-cli build sdwilsh/kernel-bazzite-bc250 ./upstream/build/SRPMS/kernel-*.src.rpm
-
-
-
-
