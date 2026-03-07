@@ -5,7 +5,6 @@ on:
   # TODO:
   # - setup renovate to update this file on new bazzite kernel releases
   # - actually setup COPR
-  # - pin things
   pull_request:
     paths:
       - .github/workflows/release.yaml
@@ -24,12 +23,12 @@ jobs:
           - 44
     steps:
       - name: Checkout local repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: local
 
       - name: Checkout upstream repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: upstream
           ref: 6.17.7-ba25
