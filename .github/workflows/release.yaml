@@ -21,6 +21,7 @@ jobs:
       matrix:
         fedora_version:
           - 43
+          - 44
     steps:
       - name: Checkout local repository
         uses: actions/checkout@v4
