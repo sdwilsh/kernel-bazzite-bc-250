@@ -52,9 +52,6 @@ jobs:
       - name: Add BC-250 Frequency Patch
         run:
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
-      # TODO: remove this step
-      - name: Debug
-        run: ls -la ./upstream
       - name: Build Kernel SRPMs
         run: |
           sudo podman run \
@@ -87,7 +84,6 @@ jobs:
           EOF
         if: github.event_name != 'pull_request_target'
 
-      # TODO: remove this step
       - name: Log Upload Targets
         run: ls -la ./upstream/build/SRPMS/kernel-*.src.rpm
         if: github.event_name == 'pull_request_target'
