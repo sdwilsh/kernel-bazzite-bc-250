@@ -2,8 +2,6 @@ name: Patch Bazzite Kernel Source
 
 on:
   workflow_dispatch:
-  # TODO:
-  # - setup renovate to update this file on new bazzite kernel releases
   pull_request:
     paths: &paths
       - .github/workflows/release.yaml
@@ -83,7 +81,7 @@ jobs:
     container:
       image: fedora:latest
     environment: Production
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && !contains('refs/heads/renovate', github.ref)
     needs: patch-kernel
     steps:
       - name: Download SRPM
