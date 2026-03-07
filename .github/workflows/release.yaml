@@ -57,13 +57,13 @@ jobs:
             fedora_builder rpmbuild \
               --with bazzite \
               --with ubsb \
-                --define '_topdir   %(pwd)/build' \
-                --define '_builddir %{_topdir}/BUILD' \
-                --define '_rpmdir   %{_topdir}/RPMS' \
-                --define '_srcrpmdir %{_topdir}/SRPMS' \
-                --define '_sourcedir %(pwd)/' \
-                --define '_specdir  %(pwd)/' \
-              bs kernel.spec
+              --define '_topdir %(pwd)/build' \
+              --define '_builddir %{_topdir}/BUILD' \
+              --define '_rpmdir %{_topdir}/RPMS' \
+              --define '_srcrpmdir %{_topdir}/SRPMS' \
+              --define '_sourcedir %(pwd)/' \
+              --define '_specdir %(pwd)/' \
+              -bs kernel.spec
 
       - name: Authenticate with COPR
         run: |
