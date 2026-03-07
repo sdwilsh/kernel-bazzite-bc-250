@@ -46,7 +46,7 @@ jobs:
         run: |
           sudo podman run \
             --rm \
-            -v $(pwd)/upstream:/workspace \
+            -v ./upstream:/workspace \
             -e UID=$UID \
             -e GID=$GID \
             -e ARCH=x86_64 \
