@@ -32,15 +32,17 @@
         "automergeType": "branch",
         "description": "Automatic GitHub Action Updates",
         "matchUpdateTypes": [
+            "digest",
             "minor",
             "patch"
         ],
         "matchPackageNames": [
             "actions/checkout",
             "actions/download-artifact",
-            "actions/upload-artifact"
+            "actions/upload-artifact",
+            "fedora"
         ],
-        "minimumReleaseAge": "3 days"
+        "minimumReleaseAge": "1 day"
     }
   ]
 }
