@@ -79,7 +79,7 @@ jobs:
       
   upload-to-copr:
     container:
-      image: fedora:latest
+      image: fedora:latest@sha256:781b7642e8bf256e9cf75d2aa58d86f5cc695fd2df113517614e181a5eee9138
     environment: Production
     if: github.event_name != 'pull_request' && !contains('refs/heads/renovate', github.ref)
     needs: patch-kernel
