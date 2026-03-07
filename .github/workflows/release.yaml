@@ -6,7 +6,7 @@ on:
   # - setup renovate to update this file on new bazzite kernel releases
   # - actually setup COPR
   # - pin things
-  pull_request_target:
+  pull_request:
     paths:
       - .github/workflows/release.yaml
       - linux-kernel-bc250.patch
@@ -104,9 +104,9 @@ jobs:
           token = ${{ secrets.COPR_TOKEN }}
           copr_url = https://copr.fedorainfracloud.org
           EOF
-        if: github.event_name != 'pull_request_target'
+        if: github.event_name != 'pull_request'
 
       - name: Upload to COPR
         run: |
           copr-cli build sdwilsh/kernel-bazzite-bc-250 ./upstream/build/SRPMS/kernel-*.src.rpm
-        if: github.event_name != 'pull_request_target'
+        if: github.event_name != 'pull_request'
