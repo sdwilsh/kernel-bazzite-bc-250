@@ -23,13 +23,15 @@ jobs:
     steps:
       - name: Checkout local repository
         uses: actions/checkout@v4
-        path: local
+        with:
+          path: local
 
       - name: Checkout upstream repository
         uses: actions/checkout@v4
-        path: upstream
-        ref: 6.17.7-ba25
-        repository: bazzite-org/kernel-bazzite
+        with:
+          path: upstream
+          ref: 6.17.7-ba25
+          repository: bazzite-org/kernel-bazzite
 
       - name: Create Build Environment
         run: |
