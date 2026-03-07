@@ -5,6 +5,7 @@ on:
   # TODO:
   # - setup renovate to update this file on new bazzite kernel releases
   # - actually setup COPR
+  # - pin things
   pull_request_target:
     paths:
       - .github/workflows/release.yaml
@@ -72,6 +73,27 @@ jobs:
               --define '_specdir %(pwd)/' \
               -bs kernel.spec
 
+      - name: Upload SRPM
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: srpm-fc${{ matrix.fedora_version }}
+          path: ./upstream/build/SRPMS/kernel-*.src.rpm
+      
+  upload-to-copr:
+    environment: Production
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    needs: patch-kernel
+    steps:
+      - name: Download SRPM
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          merge-multiple: true
+          path: SRPMS
+          pattern: srpm-fc*
+      - name: Install COPR CLI
+        run: dnf install -y copr-cli
       - name: Authenticate with COPR
         run: |
           mkdir -p ~/.config
@@ -84,10 +106,7 @@ jobs:
           EOF
         if: github.event_name != 'pull_request_target'
 
-      - name: Log Upload Targets
-        run: ls -la ./upstream/build/SRPMS/kernel-*.src.rpm
-        if: github.event_name == 'pull_request_target'
       - name: Upload to COPR
         run: |
-          copr-cli build sdwilsh/kernel-bazzite-bc250 ./upstream/build/SRPMS/kernel-*.src.rpm
+          copr-cli build sdwilsh/kernel-bazzite-bc-250 ./upstream/build/SRPMS/kernel-*.src.rpm
         if: github.event_name != 'pull_request_target'
