@@ -41,7 +41,7 @@ jobs:
             echo "Downloading ${linuxfname}"
             curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
-      - name: Add BC-250 Frequency Patch
+      - name: Add BC-250 GPU Frequency Patch
         run:
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
       - name: Build Kernel SRPMs
