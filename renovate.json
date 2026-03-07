@@ -9,7 +9,7 @@
         ],
         "matchStrings": [
             "ref:\\s+(?<currentValue>.*?)\\n\\s+repository:\\s+(?<depName>.*?)\\n"
-        ]
+        ],
     }
   ],
   "extends": [
@@ -25,7 +25,8 @@
         "matchPackageNames": [
             "bazzite-org/kernel-bazzite"
         ],
-        "minimumReleaseAge": "1 day"
+        "minimumReleaseAge": "1 day",
+        "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<compatibility>ba)(?<build>\\d+)$"
     },
     {
         "automerge": true,
