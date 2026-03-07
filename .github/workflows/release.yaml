@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
   # TODO:
   # - setup renovate to update this file on new bazzite kernel releases
-  # - actually setup COPR
   pull_request:
     paths:
       - .github/workflows/release.yaml
@@ -16,24 +15,17 @@ on:
 jobs:
   patch-kernel:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        fedora_version:
-          - 43
-          - 44
     steps:
       - name: Checkout local repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: local
-
       - name: Checkout upstream repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: upstream
           ref: 6.17.7-ba25
           repository: bazzite-org/kernel-bazzite
-
       - name: Create Build Environment
         run: |
           FEDORA_VERSION="${{ matrix.fedora_version }}"
@@ -49,7 +41,6 @@ jobs:
             echo "Downloading ${linuxfname}"
             curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
-      
       - name: Add BC-250 Frequency Patch
         run:
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
@@ -72,18 +63,22 @@ jobs:
               --define '_sourcedir %(pwd)/' \
               --define '_specdir %(pwd)/' \
               -bs kernel.spec
-
       - name: Upload SRPM
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: srpm-fc${{ matrix.fedora_version }}
           path: ./upstream/build/SRPMS/kernel-*.src.rpm
+    strategy:
+      matrix:
+        fedora_version:
+          - 43
+          - 44
       
   upload-to-copr:
-    environment: Production
-    runs-on: ubuntu-latest
     container:
       image: fedora:latest
+    environment: Production
+    if: github.event_name != 'pull_request'
     needs: patch-kernel
     steps:
       - name: Download SRPM
@@ -104,9 +99,7 @@ jobs:
           token = ${{ secrets.COPR_TOKEN }}
           copr_url = https://copr.fedorainfracloud.org
           EOF
-        if: github.event_name != 'pull_request'
-
       - name: Upload to COPR
         run: |
           copr-cli build sdwilsh/kernel-bazzite-bc-250 ./upstream/build/SRPMS/kernel-*.src.rpm
-        if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
