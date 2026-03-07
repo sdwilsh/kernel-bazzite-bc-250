@@ -1,59 +1,110 @@
-name: Patch Fedora Kernel Source
+name: Patch Bazzite Kernel Source
 
 on:
-  schedule:
-    - cron: "40 2 * * 0" # 8:40 utc monday
   workflow_dispatch:
+  # TODO:
+  # - setup renovate to update this file on new bazzite kernel releases
+  pull_request:
+    paths: &paths
+      - .github/workflows/release.yaml
+      - linux-kernel-bc250.patch
+    types:
+      - opened
+      - synchronize
+  push:
+    branches:
+      - main
+      - renovate/**
+    paths: *paths
 
 jobs:
   patch-kernel:
     runs-on: ubuntu-latest
-    container:
-      image: fedora:43
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Build Tools
+      - name: Checkout local repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: local
+      - name: Checkout upstream repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: upstream
+          ref: 6.17.7-ba25
+          repository: bazzite-org/kernel-bazzite
+      - name: Create Build Environment
         run: |
-          dnf install -y rpm-build rpmdevtools fedpkg copr-cli
-
-      - name: Setup RPM build tree
-        run: rpmdev-setuptree
-
-      - name: Download Fedora Kernel SRPM
-        run: dnf download --source kernel
-
-      - name: Extract the SRPM
+          FEDORA_VERSION="${{ matrix.fedora_version }}"
+          sudo podman build upstream --tag 'fedora_builder' \
+            --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
+            --build-arg FEDORA_VERSION=${FEDORA_VERSION}
+          sudo podman image prune -f
+          TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' ./upstream/kernel.spec)
+          echo "TARFILE_RELEASE is $TARFILE_RELEASE"
+          echo "$TARFILE_RELEASE" > ./upstream/.tarfile-release
+          linuxfname="./upstream/linux-${TARFILE_RELEASE}.tar.xz"
+          if [ ! -f "${linuxfname}" ]; then
+            echo "Downloading ${linuxfname}"
+            curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
+          fi
+      - name: Add BC-250 GPU Frequency Patch
+        run:
+          cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
+      - name: Build Kernel SRPMs
         run: |
-          rpm -ivh kernel-*.rpm
-
-      - name: Apply Patch
-        run: |
-          cp ./linux-kernel-bc250.patch ~/rpmbuild/SOURCES
-          sed -i '/^Patch999999: linux-kernel-test.patch$/a Patch100: linux-kernel-bc250.patch' ~/rpmbuild/SPECS/kernel.spec
-          sed -i '/^ApplyOptionalPatch linux-kernel-test.patch$/a ApplyOptionalPatch linux-kernel-bc250.patch' ~/rpmbuild/SPECS/kernel.spec
-
-      - name: Build SRPM
-        run: |
-          rpmbuild -bs ~/rpmbuild/SPECS/kernel.spec
-
+          sudo podman run \
+            --rm \
+            -v ./upstream:/workspace \
+            -e UID=$UID \
+            -e GID=$GID \
+            -e ARCH=x86_64 \
+            -e FEDORA_VERSION=${{ matrix.fedora_version }} \
+            fedora_builder rpmbuild \
+              --with bazzite \
+              --with ubsb \
+              --define '_topdir %(pwd)/build' \
+              --define '_builddir %{_topdir}/BUILD' \
+              --define '_rpmdir %{_topdir}/RPMS' \
+              --define '_srcrpmdir %{_topdir}/SRPMS' \
+              --define '_sourcedir %(pwd)/' \
+              --define '_specdir %(pwd)/' \
+              -bs kernel.spec
+      - name: Upload SRPM
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: srpm-fc${{ matrix.fedora_version }}
+          path: ./upstream/build/SRPMS/kernel-*.src.rpm
+    strategy:
+      matrix:
+        fedora_version:
+          - 43
+          - 44
+      
+  upload-to-copr:
+    container:
+      image: fedora:latest
+    environment: Production
+    if: github.event_name != 'pull_request'
+    needs: patch-kernel
+    steps:
+      - name: Download SRPM
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          merge-multiple: true
+          path: SRPMS
+          pattern: srpm-fc*
+      - name: Install COPR CLI
+        run: dnf install -y copr-cli
       - name: Authenticate with COPR
         run: |
           mkdir -p ~/.config
           cat > ~/.config/copr <<EOF
           [copr-cli]
           login = ${{ secrets.COPR_LOGIN }}
-          username = f1ana
+          username = sdwilsh
           token = ${{ secrets.COPR_TOKEN }}
           copr_url = https://copr.fedorainfracloud.org
           EOF
-
       - name: Upload to COPR
         run: |
-          copr-cli build f1ana/patched-kernel-bc250 ~/rpmbuild/SRPMS/kernel-*.src.rpm
-
-
-
-
+          copr-cli build sdwilsh/kernel-bazzite-bc-250 ./upstream/build/SRPMS/kernel-*.src.rpm
+    runs-on: ubuntu-latest
