@@ -42,6 +42,9 @@ jobs:
       - name: Add BC-250 Frequency Patch
         run:
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
+      # TODO: remove this step
+      - name: Debug
+        run: ls -la ./upstream
       - name: Build Kernel SRPMs
         run: |
           sudo podman run \
@@ -73,9 +76,12 @@ jobs:
           copr_url = https://copr.fedorainfracloud.org
           EOF
 
+      # TODO: remove this step
+      - name: Debug Upload
+        run: ls -la ./upstream/build/SRPMS/kernel-*.src.rpm
       - name: Upload to COPR
         run: |
-          copr-cli build sdwilsh/kernel-bazzite-bc250 ./upstream/SRPMS/kernel-*.src.rpm
+          copr-cli build sdwilsh/kernel-bazzite-bc250 ./upstream/build/SRPMS/kernel-*.src.rpm
 
 
 
