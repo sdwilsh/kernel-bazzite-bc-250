@@ -52,6 +52,16 @@ jobs:
           Patch99: patch-99-bc250-freq.patch
           %endif
           EOF
+      - name: Debug kernel.spec
+        run: |
+          sudo podman run \
+            --rm \
+            -v ./upstream:/workspace \
+            -e UID=$UID \
+            -e GID=$GID \
+            -e ARCH=x86_64 \
+            -e FEDORA_VERSION=${{ matrix.fedora_version }} \
+            fedora_builder cat /workspace/kernel.spec
       - name: Build Kernel RPMs
         run: |
           sudo podman run \
