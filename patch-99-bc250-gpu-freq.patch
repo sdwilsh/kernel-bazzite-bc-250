@@ -1,0 +1,32 @@
+From bc61f09502b6ec9e66a1add0d3bb678f363b1a36 Mon Sep 17 00:00:00 2001
+From: Shawn Wilsher <656602+sdwilsh@users.noreply.github.com>
+Date: Sun, 8 Mar 2026 11:26:33 -0700
+Subject: [PATCH] feat: Expand BC-250 Kernel GPU Frequency Range
+
+This change is credited to [ViRazY](https://github.com/Vinjul1704).
+
+It updates the max GPU frequency to 2230 MHz (from 2000 MHz) and the min
+GPU frequency to 350 MHz (from 1000 MHz) to allow for deeper idle
+states.
+---
+ drivers/gpu/drm/amd/pm/swsmu/smu11/cyan_skillfish_ppt.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu11/cyan_skillfish_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu11/cyan_skillfish_ppt.c
+index 9548bd3c624b..14086e3e56ef 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu11/cyan_skillfish_ppt.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu11/cyan_skillfish_ppt.c
+@@ -45,8 +45,8 @@
+ #undef pr_debug
+ 
+ /* unit: MHz */
+-#define CYAN_SKILLFISH_SCLK_MIN			1000
+-#define CYAN_SKILLFISH_SCLK_MAX			2000
++#define CYAN_SKILLFISH_SCLK_MIN			350
++#define CYAN_SKILLFISH_SCLK_MAX			2230
+ 
+ /* unit: mV */
+ #define CYAN_SKILLFISH_VDDC_MIN			700
+-- 
+2.53.0
+

@@ -46,12 +46,12 @@ jobs:
           fi
       - name: Add BC-250 GPU Frequency Patch
         run: |
-          cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
+          cp ./local/patch-99-bc250-gpu-freq.patch ./upstream/
           PATCH_SOURCE_LINE=$(echo "$(grep -m1 -n "Patch999999: linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 3" | bc)
-          sed "${PATCH_SOURCE_LINE}i Patch99: patch-99-bc250-freq.patch" ./upstream/kernel.spec > new-kernel.spec
+          sed "${PATCH_SOURCE_LINE}i Patch99: patch-99-bc250-gpu-freq.patch" ./upstream/kernel.spec > new-kernel.spec
 
           APPLY_PATCH_LINE=$(echo "$(grep -m1 -n "ApplyOptionalPatch linux-kernel-test.patch" new-kernel.spec | cut -d: -f1) - 2" | bc)
-          sed "${APPLY_PATCH_LINE}i ApplyOptionalPatch patch-99-bc250-freq.patch" new-kernel.spec > ./upstream/kernel.spec
+          sed "${APPLY_PATCH_LINE}i ApplyOptionalPatch patch-99-bc250-gpu-freq.patch" new-kernel.spec > ./upstream/kernel.spec
       - name: Debug kernel.spec
         run: |
           cat ./upstream/kernel.spec
