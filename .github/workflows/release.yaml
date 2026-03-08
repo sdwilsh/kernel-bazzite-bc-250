@@ -35,7 +35,7 @@ jobs:
           PATCH_SOURCE_LINE=$(echo "$(grep -m1 -n "Patch999999: linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 3" | bc)
           sed -i "${PATCH_SOURCE_LINE}i Patch99: patch-99-bc250-gpu-freq.patch" ./upstream/kernel.spec
 
-          APPLY_PATCH_LINE=$(echo "$(grep -m1 -n "ApplyOptionalPatch linux-kernel-test.patch" new-kernel.spec | cut -d: -f1) - 2" | bc)
+          APPLY_PATCH_LINE=$(echo "$(grep -m1 -n "ApplyOptionalPatch linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 2" | bc)
           sed -i "${APPLY_PATCH_LINE}i ApplyOptionalPatch patch-99-bc250-gpu-freq.patch" ./upstream/kernel.spec
       - name: Debug kernel.spec
         run: |
