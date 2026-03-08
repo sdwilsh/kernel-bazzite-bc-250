@@ -29,21 +29,6 @@ jobs:
           path: upstream
           ref: 6.17.7-ba25
           repository: bazzite-org/kernel-bazzite
-      - name: Create Build Environment
-        run: |
-          FEDORA_VERSION="${{ matrix.fedora_version }}"
-          sudo podman build upstream --tag 'fedora_builder' \
-            --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
-            --build-arg FEDORA_VERSION=${FEDORA_VERSION}
-          sudo podman image prune -f
-          TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' ./upstream/kernel.spec)
-          echo "TARFILE_RELEASE is $TARFILE_RELEASE"
-          echo "$TARFILE_RELEASE" > ./upstream/.tarfile-release
-          linuxfname="./upstream/linux-${TARFILE_RELEASE}.tar.xz"
-          if [ ! -f "${linuxfname}" ]; then
-            echo "Downloading ${linuxfname}"
-            curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
-          fi
       - name: Add BC-250 GPU Frequency Patch
         run: |
           cp ./local/patch-99-bc250-gpu-freq.patch ./upstream/
@@ -55,6 +40,21 @@ jobs:
       - name: Debug kernel.spec
         run: |
           cat ./upstream/kernel.spec
+          ls -l ./upstream/patch*
+      - name: Create Build Environment
+        run: |
+          sudo podman build upstream --tag 'fedora_builder' \
+            --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
+            --build-arg FEDORA_VERSION=${{ matrix.fedora_version }}
+          sudo podman image prune -f
+          TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' ./upstream/kernel.spec)
+          echo "TARFILE_RELEASE is $TARFILE_RELEASE"
+          echo "$TARFILE_RELEASE" > ./upstream/.tarfile-release
+          linuxfname="./upstream/linux-${TARFILE_RELEASE}.tar.xz"
+          if [ ! -f "${linuxfname}" ]; then
+            echo "Downloading ${linuxfname}"
+            curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
+          fi
       - name: Build Kernel RPMs
         run: |
           sudo podman run \
