@@ -45,8 +45,13 @@ jobs:
             curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
       - name: Add BC-250 GPU Frequency Patch
-        run:
+        run: |
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
+          cat <<EOF >> ./upstream/kernel.spec
+          %if !%{nopatches}
+          Patch99: patch-99-bc250-freq.patch
+          %endif
+          EOF
       - name: Build Kernel SRPMs
         run: |
           sudo podman run \
