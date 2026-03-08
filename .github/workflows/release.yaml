@@ -44,28 +44,17 @@ jobs:
             echo "Downloading ${linuxfname}"
             curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
-      - name: Debug kernel.spec
-        run: |
-          cat ./upstream/kernel.spec
       - name: Add BC-250 GPU Frequency Patch
         run: |
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
-          cat <<EOF >> ./upstream/kernel.spec
-          %if !%{nopatches}
-          Patch99: patch-99-bc250-freq.patch
-          %endif
-          EOF
+          PATCH_SOURCE_LINE=$(echo "$(grep -m1 -n "Patch999999: linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 4" | bc)
+          sed "${PATCH_SOURCE_LINE}i Patch99: patch-99-bc250-freq.patch" ./upstream/kernel.spec
+
+          APPLY_PATCH_LINE=$(echo "$(grep -m1 -n "ApplyOptionalPatch linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 3" | bc)
+          sed "${APPLY_PATCH_LINE}i ApplyOptionalPatch patch-99-bc250-freq.patch" ./upstream/kernel.spec
       - name: Debug kernel.spec
         run: |
-          ls -l ./upstream
-          sudo podman run \
-            --rm \
-            -v ./upstream:/workspace \
-            -e UID=$UID \
-            -e GID=$GID \
-            -e ARCH=x86_64 \
-            -e FEDORA_VERSION=${{ matrix.fedora_version }} \
-            fedora_builder cat /workspace/kernel.spec
+          cat ./upstream/kernel.spec
       - name: Build Kernel RPMs
         run: |
           sudo podman run \
