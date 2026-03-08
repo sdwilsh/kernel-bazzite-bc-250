@@ -44,6 +44,9 @@ jobs:
             echo "Downloading ${linuxfname}"
             curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
+      - name: Debug kernel.spec
+        run: |
+          cat ./upstream/kernel.spec
       - name: Add BC-250 GPU Frequency Patch
         run: |
           cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
@@ -54,6 +57,7 @@ jobs:
           EOF
       - name: Debug kernel.spec
         run: |
+          ls -l ./upstream
           sudo podman run \
             --rm \
             -v ./upstream:/workspace \
