@@ -52,7 +52,7 @@ jobs:
           Patch99: patch-99-bc250-freq.patch
           %endif
           EOF
-      - name: Build Kernel SRPMs
+      - name: Build Kernel RPMs
         run: |
           sudo podman run \
             --rm \
@@ -70,18 +70,42 @@ jobs:
               --define '_srcrpmdir %{_topdir}/SRPMS' \
               --define '_sourcedir %(pwd)/' \
               --define '_specdir %(pwd)/' \
-              -bs kernel.spec
+              -ba kernel.spec
+      - name: Extract DRPM
+        run: |
+          mkdir -p ./upstrea/build/DRPMS
+          mv ./upstream/RPMS/kernel-debuginfo-*.rpm ./upstream/build/DRPMS/
+      - name: Upload DRPM
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: debuginfo-fc${{ matrix.fedora_version }}
+          path: ./upstream/build/DRPMS/kernel-*.src.rpm
+      - name: Upload RPM
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: rpm-fc${{ matrix.fedora_version }}
+          path: ./upstream/build/RPMS/kernel-*.src.rpm
       - name: Upload SRPM
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: srpm-fc${{ matrix.fedora_version }}
           path: ./upstream/build/SRPMS/kernel-*.src.rpm
+      - name: Generate artifact attestation
+        if: github.event_name != 'pull_request' && !contains('refs/heads/renovate', github.ref)
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: |
+            ./build/DRPMS/kernel-debuginfo-*.rpm
+            ./build/RPMS/kernel-*.rpm
+            ./build/SRPMS/kernel-*.rpm
     strategy:
       matrix:
         fedora_version:
           - 43
           - 44
       
+  # TODO: rewrite to handle this correctly after a release is made!
+  # TODO: setup release process
   upload-to-copr:
     container:
       image: fedora:latest
