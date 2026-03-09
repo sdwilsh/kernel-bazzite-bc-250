@@ -39,7 +39,7 @@ jobs:
           sed -i "${APPLY_PATCH_LINE}i ApplyOptionalPatch patch-99-bc250-gpu-freq.patch" ./upstream/kernel.spec
       - name: Debug kernel.spec
         run: |
-          sed -i "s/\*\) $patch_command/\*\) cat drivers\/gpu\/drm\/amd\/pm\/swsmu\/smu11\/cyan_skillfish_ppt.c \&\& $patch_command/" ./upstream/kernel.spec
+          sed -i "s/\*) $patch_command/\*) cat drivers\/gpu\/drm\/amd\/pm\/swsmu\/smu11\/cyan_skillfish_ppt.c \&\& $patch_command/" ./upstream/kernel.spec
           sed -i "s/patch_command='git --work-tree=. apply'/patch_command='git --work-tree=. apply --reject'/" ./upstream/kernel.spec
           cat ./upstream/kernel.spec
           ls -l ./upstream/patch*
