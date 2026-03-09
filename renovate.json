@@ -38,6 +38,7 @@
             "patch"
         ],
         "matchPackageNames": [
+            "actions/attest",
             "actions/checkout",
             "actions/download-artifact",
             "actions/upload-artifact",

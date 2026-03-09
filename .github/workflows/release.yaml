@@ -29,12 +29,24 @@ jobs:
           path: upstream
           ref: 6.17.7-ba25
           repository: bazzite-org/kernel-bazzite
+      - name: Add BC-250 GPU Frequency Patch
+        run: |
+          cp ./local/patch-99-bc250-gpu-freq.patch ./upstream/
+          PATCH_SOURCE_LINE=$(echo "$(grep -m1 -n "Patch999999: linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 3" | bc)
+          sed -i "${PATCH_SOURCE_LINE}i Patch99: patch-99-bc250-gpu-freq.patch" ./upstream/kernel.spec
+
+          APPLY_PATCH_LINE=$(echo "$(grep -m1 -n "ApplyOptionalPatch linux-kernel-test.patch" ./upstream/kernel.spec | cut -d: -f1) - 2" | bc)
+          sed -i "${APPLY_PATCH_LINE}i ApplyOptionalPatch patch-99-bc250-gpu-freq.patch" ./upstream/kernel.spec
+      - name: Debug kernel.spec
+        run: |
+          sed -i "s/patch_command='git --work-tree=. apply'/patch_command='git --work-tree=. apply -v --reject'/" ./upstream/kernel.spec
+          cat ./upstream/kernel.spec
+          ls -l ./upstream/patch*
       - name: Create Build Environment
         run: |
-          FEDORA_VERSION="${{ matrix.fedora_version }}"
           sudo podman build upstream --tag 'fedora_builder' \
             --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
-            --build-arg FEDORA_VERSION=${FEDORA_VERSION}
+            --build-arg FEDORA_VERSION=${{ matrix.fedora_version }}
           sudo podman image prune -f
           TARFILE_RELEASE=$(sed -n 's/^%define[[:space:]]\+tarfile_release[[:space:]]\+//p' ./upstream/kernel.spec)
           echo "TARFILE_RELEASE is $TARFILE_RELEASE"
@@ -44,15 +56,7 @@ jobs:
             echo "Downloading ${linuxfname}"
             curl -L -o "${linuxfname}" "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${TARFILE_RELEASE}.tar.xz"
           fi
-      - name: Add BC-250 GPU Frequency Patch
-        run: |
-          cp ./local/linux-kernel-bc250.patch ./upstream/patch-99-bc250-freq.patch
-          cat <<EOF >> ./upstream/kernel.spec
-          %if !%{nopatches}
-          Patch99: patch-99-bc250-freq.patch
-          %endif
-          EOF
-      - name: Build Kernel SRPMs
+      - name: Build Kernel RPMs
         run: |
           sudo podman run \
             --rm \
@@ -70,18 +74,42 @@ jobs:
               --define '_srcrpmdir %{_topdir}/SRPMS' \
               --define '_sourcedir %(pwd)/' \
               --define '_specdir %(pwd)/' \
-              -bs kernel.spec
+              -ba kernel.spec
+      - name: Extract DRPM
+        run: |
+          mkdir -p ./upstrea/build/DRPMS
+          mv ./upstream/RPMS/kernel-debuginfo-*.rpm ./upstream/build/DRPMS/
+      - name: Upload DRPM
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: debuginfo-fc${{ matrix.fedora_version }}
+          path: ./upstream/build/DRPMS/kernel-*.src.rpm
+      - name: Upload RPM
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: rpm-fc${{ matrix.fedora_version }}
+          path: ./upstream/build/RPMS/kernel-*.src.rpm
       - name: Upload SRPM
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: srpm-fc${{ matrix.fedora_version }}
           path: ./upstream/build/SRPMS/kernel-*.src.rpm
+      - name: Generate artifact attestation
+        if: github.event_name != 'pull_request' && !contains('refs/heads/renovate', github.ref)
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: |
+            ./build/DRPMS/kernel-debuginfo-*.rpm
+            ./build/RPMS/kernel-*.rpm
+            ./build/SRPMS/kernel-*.rpm
     strategy:
       matrix:
         fedora_version:
           - 43
           - 44
       
+  # TODO: rewrite to handle this correctly after a release is made!
+  # TODO: setup release process
   upload-to-copr:
     container:
       image: fedora:latest
